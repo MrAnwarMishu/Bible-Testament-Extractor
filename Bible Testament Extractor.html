@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Testament Extractor</title>
+    <link rel="icon" href="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E📖%3C/text%3E%3C/svg%3E">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+        }
+        .textarea-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 400px;
+            height: 300px;
+            font-family: Arial, sans-serif;
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+        }
+        button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            display: block;
+            visibility: hidden;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Testament Extractor</h1>
+        <div class="textarea-container">
+            <textarea id="inputText" placeholder="Paste Bible book lines here..."></textarea>
+            <button id="sortButton" onclick="handleButtonClick()" disabled>🆗</button>
+        </div>
+    </div>
+
+    <script>
+        let resetTimeoutDuration = 2000;
+        let debounceTimeout;
+
+        document.getElementById('inputText').addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(validateInput, 300);
+        });
+
+        function validateInput() {
+            const textArea = document.getElementById('inputText');
+            const sortButton = document.getElementById('sortButton');
+            const inputText = textArea.value.trim();
+
+            if (inputText === '') {
+                sortButton.disabled = true;
+                sortButton.style.visibility = 'hidden';
+            } else {
+                sortButton.disabled = false;
+                sortButton.style.visibility = 'visible';
+            }
+        }
+
+        function handleButtonClick() {
+            const sortButton = document.getElementById('sortButton');
+
+            sortButton.style.backgroundColor = 'green';
+            sortButton.textContent = '✔️ Copied!';
+
+            const inputText = document.getElementById('inputText').value.trim();
+
+            if (inputText === '') {
+                resetPage();
+                return;
+            }
+
+            sortAndRemoveDuplicates();
+            copyText();
+
+            setTimeout(() => {
+                resetPage();
+            }, resetTimeoutDuration);
+        }
+
+        function sortAndRemoveDuplicates() {
+            const inputText = document.getElementById('inputText').value;
+            const lines = inputText.split('\n').map(line => line.trim()).filter(Boolean);
+
+            const oldTestamentBooks = [
+                "Genesis","Exodus","Leviticus","Numbers","Deuteronomy",
+                "Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings",
+                "1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job",
+                "Psalm","Proverbs","Ecclesiastes","Song of Solomon","Isaiah",
+                "Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel",
+                "Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah",
+                "Haggai","Zechariah","Malachi"
+            ];
+
+            const newTestamentBooks = [
+                "Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians",
+                "2 Corinthians","Galatians","Ephesians","Philippians","Colossians",
+                "1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy",
+                "Titus","Philemon","Hebrews","James","1 Peter","2 Peter",
+                "1 John","2 John","3 John","Jude","Revelation"
+            ];
+
+            const oldTestament = [];
+            const newTestament = [];
+            const unknown = [];
+
+            for (const line of lines) {
+                if (oldTestamentBooks.some(book => line.startsWith(book))) {
+                    oldTestament.push(line);
+                } else if (newTestamentBooks.some(book => line.startsWith(book))) {
+                    newTestament.push(line);
+                } else {
+                    unknown.push(line);
+                }
+            }
+
+            oldTestament.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            newTestament.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+            unknown.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+            const outputLines = [];
+
+            if (oldTestament.length > 0) {
+                outputLines.push('--- Old Testament ---');
+                outputLines.push(...oldTestament);
+            }
+
+            if (newTestament.length > 0) {
+                outputLines.push('--- New Testament ---');
+                outputLines.push(...newTestament);
+            }
+
+            if (unknown.length > 0) {
+                outputLines.push('--- Unknown / Other ---');
+                outputLines.push(...unknown);
+            }
+
+            document.getElementById('inputText').value = outputLines.join('\n');
+        }
+
+        async function copyText() {
+            try {
+                const inputText = document.getElementById('inputText').value;
+                await navigator.clipboard.writeText(inputText);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        }
+
+        function resetPage() {
+            const inputTextArea = document.getElementById('inputText');
+            const sortButton = document.getElementById('sortButton');
+
+            inputTextArea.value = '';
+            sortButton.style.backgroundColor = '#4CAF50';
+            sortButton.textContent = '🆗';
+            sortButton.disabled = true;
+            sortButton.style.visibility = 'hidden';
+        }
+    </script>
+</body>
+</html>
